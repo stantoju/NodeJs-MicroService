@@ -1,0 +1,73 @@
+version: "3"
+services:
+  api-gateway:
+    build:
+      context: "."
+      dockerfile: "./api-gateway/Dockerfile"
+    depends_on:
+      - auth-service
+      - notification-service
+      - chat-service
+    environment:
+      - AUTH_SERVICE_URI=http://auth-service:7100
+      - NOTIFICATION_SERVICE_URI=http://notification-service:7101
+      - CHAT_SERVICE_URI=http://chat-service:7102
+    ports:
+      - "7000:7000"
+    volumes:
+      - ./api-gateway:/opt/app
+
+  auth-service:
+    build:
+      context: "."
+      dockerfile: "./auth-service/Dockerfile"
+    depends_on:
+      - auth-service-db
+    environment:
+      - DB_URI=mysql://root:password@auth-service-db/db?charset=UTF8
+    ports:
+      - "7100:7100"
+    volumes:
+      - ./auth-service:/opt/app
+
+  auth-service-db:
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=db
+    image: mysql:5.7.20
+    ports:
+      - 0.0.0.0:7200:3306
+
+  notification-service:
+    build:
+      context: "."
+      dockerfile: "./notification-service/Dockerfile"
+    depends_on:
+      - notification-service-db
+    environment:
+      - DB_URI=mysql://root:password@notification-service-db/db?charset=UTF8
+    ports:
+      - "7101:7101"
+    volumes:
+      - ./notification-service:/opt/app
+
+  notification-service-db:
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=db
+    image: mysql:5.7.20
+    ports:
+      - 0.0.0.0:7201:3306
+
+  chat-service:
+    build:
+      context: "."
+      dockerfile: "./chat-service/Dockerfile"
+    # depends_on:
+    #   - notification-service-db
+    # environment:
+    #   - DB_URI=mysql://root:password@notification-service-db/db?charset=UTF8
+    ports:
+      - "7102:7102"
+    volumes:
+      - ./chat-service:/opt/app
